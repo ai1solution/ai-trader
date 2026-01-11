@@ -38,7 +38,7 @@ logs/
 # Results/Data
 results/
 results_volatile_20/
-data/
+/data/
 trajectory.csv
 
 # IDEs
