@@ -1,0 +1,23 @@
+[
+    {
+        "symbol": "BTC/USD",
+        "entry_price": 92515.44782,
+        "size": 1.0,
+        "stop_loss": 90665.1388636,
+        "take_profit": 93903.17953729999
+    },
+    {
+        "symbol": "ETH/USD",
+        "entry_price": 3252.21,
+        "size": 1.0,
+        "stop_loss": 3187.1657999999998,
+        "take_profit": 3300.99315
+    },
+    {
+        "symbol": "SOL/USD",
+        "entry_price": 139.391392,
+        "size": 1.0,
+        "stop_loss": 136.60356416,
+        "take_profit": 141.48226287999998
+    }
+]

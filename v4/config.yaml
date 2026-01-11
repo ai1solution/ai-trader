@@ -1,0 +1,55 @@
+symbols:
+  - BTC/USDT
+  - ETH/USDT
+  - SOL/USDT
+  # AI / Data
+  - FET/USDT
+  - RNDR/USDT
+  - WLD/USDT
+  - GRT/USDT
+  - TAO/USDT
+  - ARKM/USDT
+  - AI/USDT
+  - NFP/USDT
+  - PHB/USDT
+  - NEAR/USDT
+  # Meme
+  - PEPE/USDT
+  - BONK/USDT
+  - WIF/USDT
+  - FLOKI/USDT
+  - MEME/USDT
+  - BOME/USDT
+
+
+universe:
+  min_price: 0.01
+  min_volume_24h: 1000000.0 # $1M daily volume
+  min_atr_pct: 0.02 # 2% daily range
+
+strategies:
+  # Using momentum_standard from results
+  - name: momentum
+    params:
+      momentum_lookback: 12
+      velocity_threshold: 0.0003
+      arm_ticks: 3
+      trend_ema_period: 200
+      take_profit_pct: 0.03
+      rsi_period: 14
+
+  # Using mean_rev_standard from results
+  - name: mean_reversion
+    params:
+      bb_period: 20
+      bb_std: 2.0
+      rsi_period: 14
+      trend_ema_period: 200
+      take_profit_pct: 0.03
+
+risk:
+  stop_loss_pct: 0.02
+
+mode: backtest
+start_date: "2024-01-01T00:00:00Z"
+end_date: "2024-01-02T00:00:00Z"

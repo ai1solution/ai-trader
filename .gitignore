@@ -1,0 +1,56 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Env
+venv/
+.venv/
+env/
+ENV/
+
+# Pytest
+.pytest_cache/
+
+# Logs
+logs/
+*.log
+
+# Results/Data
+results/
+results_volatile_20/
+data/
+trajectory.csv
+
+# IDEs
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+
+# Node
+node_modules/
+**/node_modules/
+npm-debug.log
+yarn-error.log
+public/dist/

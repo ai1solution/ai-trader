@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Trader Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <!-- Header -->
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Crypto Background Animation -->
+    <div class="crypto-bg">
+        <div class="crypto-symbol">₿</div>
+        <div class="crypto-symbol">Ξ</div>
+        <div class="crypto-symbol">₿</div>
+        <div class="crypto-symbol">Ξ</div>
+    </div>
+
+    <header class="header">
+        <div class="container">
+            <div class="logo-section">
+                <i class="fas fa-chart-line logo-icon"></i>
+                <h1 class="logo">AI Trader</h1>
+            </div>
+            <div class="header-stats">
+                <div class="stat-mini">
+                    <i class="fas fa-coins"></i>
+                    <span id="totalPnL">$0.00</span>
+                </div>
+                <div class="api-status">
+                    <span class="status-dot" id="apiStatus"></span>
+                    <span id="apiStatusText">Connecting...</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Dashboard -->
+    <main class="dashboard">
+        <div class="container">
+
+            <!-- V4 Control Panel -->
+            <section class="panel">
+                <div class="panel-header">
+                    <h2><i class="fas fa-rocket"></i> V4 Trading Engine</h2>
+                    <span class="status-badge" id="v4Status">OFFLINE</span>
+                </div>
+                <div class="panel-body">
+                    <div class="controls">
+                        <div class="input-group">
+                            <label>Mode</label>
+                            <select id="v4Mode">
+                                <option value="paper">Paper Trading</option>
+                                <option value="backtest">Backtest</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Symbols</label>
+                            <input type="text" id="v4Symbols" placeholder="BTC/USDT, ETH/USDT"
+                                value="BTC/USDT, ETH/USDT">
+                        </div>
+                        <div class="input-group">
+                            <label>Strategies</label>
+                            <div class="checkbox-group">
+                                <label><input type="checkbox" value="momentum" checked> Momentum</label>
+                                <label><input type="checkbox" value="mean_reversion"> Mean Reversion</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="button-group">
+                        <button class="btn btn-primary" id="v4Start">
+                            <i class="fas fa-play"></i> Start Engine
+                        </button>
+                        <button class="btn btn-secondary" id="v4Stop">
+                            <i class="fas fa-stop"></i> Stop Engine
+                        </button>
+                        <button class="btn btn-info" id="v4Refresh">
+                            <i class="fas fa-sync"></i> Refresh Status
+                        </button>
+                    </div>
+                    <div class="stats" id="v4Stats"></div>
+                </div>
+            </section>
+
+            <!-- Analysis Tools -->
+            <div class="panels-grid">
+                <section class="panel">
+                    <div class="panel-header">
+                        <h2><i class="fas fa-chart-area"></i> Regime Analysis</h2>
+                    </div>
+                    <div class="panel-body">
+                        <div class="input-group">
+                            <label>Symbol</label>
+                            <input type="text" id="regimeSymbol" placeholder="BTC/USDT" value="BTC/USDT">
+                        </div>
+                        <div class="input-group">
+                            <label>Date (Optional)</label>
+                            <input type="date" id="regimeDate">
+                        </div>
+                        <button class="btn btn-primary" id="checkRegime">
+                            <i class="fas fa-search"></i> Check Regime
+                        </button>
+                        <div class="result" id="regimeResult"></div>
+                    </div>
+                </section>
+
+                <section class="panel">
+                    <div class="panel-header">
+                        <h2><i class="fas fa-filter"></i> Universe Selection</h2>
+                    </div>
+                    <div class="panel-body">
+                        <div class="input-group">
+                            <label>Min Volume</label>
+                            <input type="number" id="minVolume" value="1000000">
+                        </div>
+                        <div class="input-group">
+                            <label>Min Price</label>
+                            <input type="number" id="minPrice" value="0" step="0.01">
+                        </div>
+                        <button class="btn btn-primary" id="selectUniverse">
+                            <i class="fas fa-satellite-dish"></i> Run Selection
+                        </button>
+                        <div class="result" id="universeResult"></div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Legacy Panel -->
+            <section class="panel">
+                <div class="panel-header">
+                    <h2><i class="fas fa-cogs"></i> Legacy Runners</h2>
+                </div>
+                <div class="panel-body">
+                    <div class="input-group">
+                        <label>V3 Symbols</label>
+                        <input type="text" id="v3Symbols" placeholder="BTCUSDT, ETHUSDT" value="BTCUSDT, ETHUSDT">
+                    </div>
+                    <button class="btn btn-primary" id="v3Start">
+                        <i class="fas fa-bolt"></i> Start V3 Runner
+                    </button>
+                    <div class="result" id="v3Result"></div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

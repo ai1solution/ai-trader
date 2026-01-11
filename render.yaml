@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: ai-trader
+    env: docker
+    region: ohio
+    plan: free
+    branch: main
+    autoDeploy: true
+    envVars:
+      - key: PYTHONUNBUFFERED
+        value: 1

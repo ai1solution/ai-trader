@@ -1,0 +1,16 @@
+{
+    "TAKE_PROFIT_PCT": 0.2,
+    "STOP_LOSS_PCT": -0.1,
+    "RSI_UPPER": 70,
+    "RSI_LOWER": 30,
+    "ENABLE_SHORTS": true,
+    "RVOL_THRESHOLD": 1.2,
+    "TRADE_DURATION": 180,
+    "MEANREV_RSI_LOWER": 30,
+    "MOMENTUM_RVOL": 2.3,
+    "SQUEEZE_KC_MULT": 1.5,
+    "BB_STD_DEV": 2.0,
+    "VOLATILITY_FACTOR": 1.0,
+    "PARTIAL_TAKE_PCT": 0.1,
+    "PARTIAL_CLOSE_RATIO": 0.5
+}
