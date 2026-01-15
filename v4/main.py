@@ -114,6 +114,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="v4 Paper Trading Engine")
     parser.add_argument("--config", type=str, default="v4/config.yaml", help="Path to config file")
     parser.add_argument("--no-ui", action="store_true", help="Disable TUI")
+    parser.add_argument("--symbols", nargs="+", help="Override symbols list")
     parser.add_argument("--experiment", type=str, choices=['baseline', 'universe', 'regime', 'capital', 'full'], 
                         default='full', help="Research experiment mode")
     
@@ -121,33 +122,38 @@ if __name__ == "__main__":
     
     # Map Experiment to Flags
     overrides = {}
+    if args.symbols:
+        overrides['symbols'] = args.symbols
+        
     if args.experiment == 'baseline':
-        overrides = {
+        overrides.update({
             'use_universe': False, 'use_regime': False, 
             'use_portfolio': False, 'use_protection': False
-        }
+        })
     elif args.experiment == 'universe':
-        overrides = {
+        overrides.update({
             'use_universe': True, 'use_regime': False, 
             'use_portfolio': False, 'use_protection': False
-        }
+        })
     elif args.experiment == 'regime':
-        overrides = {
+        overrides.update({
             'use_universe': True, 'use_regime': True, 
             'use_portfolio': False, 'use_protection': False
-        }
+        })
     elif args.experiment == 'capital':
-        overrides = {
+        overrides.update({
             'use_universe': True, 'use_regime': True, 
             'use_portfolio': True, 'use_protection': False
-        }
+        })
     elif args.experiment == 'full':
-        overrides = {
+        overrides.update({
             'use_universe': True, 'use_regime': True, 
             'use_portfolio': True, 'use_protection': True
-        }
+        })
     
     try:
+        if args.symbols:
+            print(f"Override: Trading {len(args.symbols)} symbols: {args.symbols}")
         asyncio.run(main(args.config, args.no_ui, overrides))
     except KeyboardInterrupt:
         print("Stopped by user.")

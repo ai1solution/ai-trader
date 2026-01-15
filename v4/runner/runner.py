@@ -26,6 +26,7 @@ STRATEGY_MAP = {
 
 from ..engine.regime import RegimeClassifier
 from ..engine.portfolio import Portfolio
+from common.supabase_client import get_supabase
 
 class ParallelRunner:
     def __init__(self, config: RunnerConfig):
@@ -36,12 +37,26 @@ class ParallelRunner:
         self.log_queue = asyncio.Queue()
         self.regime_classifier = RegimeClassifier()
         self.portfolio = Portfolio()
+        self.sb = get_supabase()
+        self.run_id = "offline"
+        self.last_db_update = 0
         
     async def setup(self):
         """
         Initialize Engines and Feeds.
         """
         print(f"[Runner] Setting up... Mode: {self.config.mode}")
+        
+        # Initialize Supabase
+        self.sb.start_background_logger()
+        meta = {
+            "version": "v4",
+            "config": self.config.__dict__ if hasattr(self.config, '__dict__') else {},
+            "symbols": self.config.symbols
+        }
+        self.run_id = self.sb.create_run(meta)
+        print(f"[Runner] Supabase Run ID: {self.run_id}")
+        
         print(f"[Flags] Universe:{self.config.use_universe} Regime:{self.config.use_regime} "
               f"Portfolio:{self.config.use_portfolio} Protection:{self.config.use_protection}")
         
@@ -110,7 +125,8 @@ class ParallelRunner:
                     log_queue=self.log_queue,
                     regime_classifier=self.regime_classifier,
                     portfolio=self.portfolio,
-                    use_protection=self.config.use_protection
+                    use_protection=self.config.use_protection,
+                    run_id=self.run_id
                 )
                 self.engines.append(engine)
                 
@@ -160,9 +176,41 @@ class ParallelRunner:
             # Allow other tasks (Dashboard) to run
             await asyncio.sleep(0) # Yield
             
+            # Periodic DB Update (every 2 seconds)
+            import time
+            now = time.time()
+            if (now - self.last_db_update) > 2.0:
+                stats = self.get_stats()
+                # Aggregate stats for run table? Or just keep alive?
+                # For now, update status to RUNNING to show it's alive
+                # Maybe store aggregate PnL in run table?
+                total_pnl = sum([s['pnl'] for s in stats])
+                self.sb.update_run_status(self.run_id, "RUNNING", result={"pnl": total_pnl, "active": active_feeds})
+                self.last_db_update = now
+            
     def get_stats(self) -> List[Dict]:
         stats = []
         for engine in self.engines:
+            # Calculate Active PnL on $100 basis
+            active_pnl_100 = 0.0
+            entry_price = 0.0
+            entry_time = None
+            
+            if engine.position and engine.last_tick:
+                entry_price = engine.position.entry_price
+                entry_time = engine.position.entry_time
+                price = engine.last_tick.price
+                
+                # Check Direction via Side
+                # Enum is usually OrderSide.BUY or .SELL
+                # We can check string value or attribute
+                is_long = (str(engine.position.side) == "OrderSide.BUY") or (getattr(engine.position.side, "value", str(engine.position.side)) == "BUY")
+                
+                if is_long:
+                    active_pnl_100 = ((price - entry_price) / entry_price) * 100
+                else:
+                    active_pnl_100 = ((entry_price - price) / entry_price) * 100
+
             stats.append({
                 "symbol": engine.symbol,
                 "strategy": engine.strategy.name,
@@ -171,7 +219,10 @@ class ParallelRunner:
                 "pnl": engine.total_pnl,
                 "trades": len(engine.trades),
                 "active": engine.position is not None,
-                "price": engine.last_tick.price if engine.last_tick else 0.0
+                "price": engine.last_tick.price if engine.last_tick else 0.0,
+                "entry_price": entry_price,
+                "entry_time": entry_time,
+                "active_pnl_100": active_pnl_100
             })
         return stats
 

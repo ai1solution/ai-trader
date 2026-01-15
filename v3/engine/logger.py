@@ -16,6 +16,7 @@ from typing import Optional, Dict, Any
 from pathlib import Path
 
 from .enums import TradingState, Regime, ExitReason
+from ..utils import format_price_str
 
 
 class EngineLogger:
@@ -146,7 +147,7 @@ class EngineLogger:
         if "regime" in log_entry:
             metrics.append(f"regime={log_entry['regime']}")
         if "price" in log_entry:
-            metrics.append(f"price={log_entry['price']:.2f}")
+            metrics.append(f"price={format_price_str(log_entry['price'])}")
         if "pnl" in log_entry:
             metrics.append(f"pnl={log_entry['pnl']:.2f}")
             

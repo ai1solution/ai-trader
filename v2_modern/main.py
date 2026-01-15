@@ -10,8 +10,14 @@ from src.engine import TradingEngine
 
 console = Console()
 
-def run_live():
+
+def run_live(symbols=None):
     console.print(f"[bold red]Starting {APP_NAME} v{VERSION} (LIVE)[/bold red]")
+    if symbols:
+        console.print(f"[yellow]Override: Trading {len(symbols)} symbols: {symbols}[/yellow]")
+    else:
+        symbols = TARGET_ASSETS
+
     logger = setup_logging(log_file="logs/live_engine.log")
     
     console.print("[yellow]Initializing Market Feed...[/yellow]")
@@ -19,7 +25,7 @@ def run_live():
     console.print("[green]Market Feed Initialized.[/green]")
 
     console.print("[yellow]Initializing Trading Engine...[/yellow]")
-    engine = TradingEngine(DEFAULT_CONFIG, feed)
+    engine = TradingEngine(DEFAULT_CONFIG, feed, symbols=symbols)
     console.print("[green]Trading Engine Initialized.[/green]")
     
     try:
@@ -29,7 +35,7 @@ def run_live():
     except KeyboardInterrupt:
         console.print("[yellow]Stopping Engine...[/yellow]")
 
-def run_replay(file_path, speed):
+def run_replay(file_path, speed, symbols=None):
     console.print(f"[bold cyan]Starting Replay Mode (File: {file_path})[/bold cyan]")
     logger = setup_logging(log_file="logs/replay_engine.log")
     
@@ -54,7 +60,7 @@ def run_replay(file_path, speed):
     # Override config for replay to avoid overwriting source
     config = DEFAULT_CONFIG.copy()
     config["TRAJECTORY_FILE"] = "replay_result.csv"
-    engine = TradingEngine(config, feed)
+    engine = TradingEngine(config, feed, symbols=symbols)
     
     try:
         while not feed.is_finished():
@@ -70,20 +76,25 @@ def run_replay(file_path, speed):
     
     console.print("[green]Replay Complete.[/green]")
 
-def run_backtest(days):
+def run_backtest(days, symbols=None):
     console.print(f"[bold blue]Starting Backtest (Last {days} Days)[/bold blue]")
+    if symbols:
+        console.print(f"[yellow]Override: Backtesting {len(symbols)} symbols: {symbols}[/yellow]")
+    else:
+        symbols = TARGET_ASSETS
+
     logger = setup_logging(log_file="logs/backtest_engine.log")
     
     end_ms = int(time.time() * 1000)
     start_ms = end_ms - (days * 24 * 3600 * 1000)
     
-    data = DataLoader.fetch_historical('kraken', TARGET_ASSETS, start_ms, end_ms)
+    data = DataLoader.fetch_historical('kraken', symbols, start_ms, end_ms)
     if not data:
          console.print("[red]No data fetched.[/red]")
          return
 
     feed = HistoricalFeed(data, start_ms, end_ms, speed="max")
-    engine = TradingEngine(DEFAULT_CONFIG, feed)
+    engine = TradingEngine(DEFAULT_CONFIG, feed, symbols=symbols)
     
     count = 0
     try:
@@ -102,26 +113,35 @@ def main():
     parser = argparse.ArgumentParser(description=f"{APP_NAME} Runner")
     subparsers = parser.add_subparsers(dest="command")
     
+    # Common Args
+    parser.add_argument("--symbols", nargs="+", help="Space separated list of symbols (e.g. BTC/USD ETH/USD)")
+
     # Live Command
-    subparsers.add_parser("live", help="Run in Live Trading Mode")
+    live_parser = subparsers.add_parser("live", help="Run in Live Trading Mode")
+    live_parser.add_argument("--symbols", nargs="+", help="Override symbols")
     
     # Replay Command
     replay_parser = subparsers.add_parser("replay", help="Run in Replay Mode")
     replay_parser.add_argument("--file", required=True, help="Path to Trajectory CSV")
     replay_parser.add_argument("--speed", default="max", choices=["realtime", "10x", "max"])
+    replay_parser.add_argument("--symbols", nargs="+", help="Override symbols")
 
     # Backtest Command
     backtest_parser = subparsers.add_parser("backtest", help="Run Historical Backtest")
     backtest_parser.add_argument("--days", type=int, default=3, help="Days of history to test")
+    backtest_parser.add_argument("--symbols", nargs="+", help="Override symbols")
 
     args = parser.parse_args()
     
+    # Root level symbols can override too if subcommand doesn't specify?
+    # Actually, argparse handles this if we put it on the subparser.
+    
     if args.command == "live":
-        run_live()
+        run_live(args.symbols)
     elif args.command == "replay":
-        run_replay(args.file, args.speed)
+        run_replay(args.file, args.speed, args.symbols)
     elif args.command == "backtest":
-        run_backtest(args.days)
+        run_backtest(args.days, args.symbols)
     else:
         parser.print_help()
 

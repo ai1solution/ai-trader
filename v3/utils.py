@@ -21,6 +21,10 @@ def round_price(price: float) -> float:
     """Round price to 8 decimal places."""
     return round(price, 8)
 
+def format_price_str(price: float) -> str:
+    """Format price with dynamic precision up to 8 decimals."""
+    return f"{price:.8f}".rstrip('0').rstrip('.')
+
 def round_qty(qty: float) -> float:
     """Round quantity down to 8 decimal places."""
     import math

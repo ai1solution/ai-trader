@@ -165,7 +165,7 @@ class TechnicalAnalysis:
 
 def format_price(price):
     if price < 1.0: return f"{price:.8f}"
-    else: return f"{price:.2f}"
+    return f"{price:.8f}".rstrip('0').rstrip('.')
 
 
 # --- Data Loading ---

@@ -1,11 +1,15 @@
 services:
   - type: web
-    name: ai-trader
+    name: ai-trader-dashboard
     env: docker
     region: ohio
     plan: free
     branch: main
     autoDeploy: true
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /
     envVars:
       - key: PYTHONUNBUFFERED
         value: 1
+      - key: NODE_ENV
+        value: production

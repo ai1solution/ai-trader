@@ -51,7 +51,7 @@ pip install ccxt rich
 ## Usage
 Run the engine:
 ```bash
-python trading_engine.py
+python v1_legacy/trading_engine.py
 ```
 *Note: Ensure you have valid Kraken API credentials if extending for live execution (currently uses public data for scanning).*
 

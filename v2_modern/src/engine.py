@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 from rich.console import Console
 
 from .types import TradeState, SymbolData, MarketRegime
@@ -11,10 +12,15 @@ from .feed import MarketDataFeed
 logger = logging.getLogger("Engine")
 console = Console()
 
+def format_price(price):
+    return f"{price:.8f}".rstrip('0').rstrip('.')
+
 class TradingEngine:
-    def __init__(self, config, market_feed: MarketDataFeed):
+    def __init__(self, config, market_feed: MarketDataFeed, symbols=None):
         self.config = config
         self.market_feed = market_feed
+        # Use provided symbols or fallback to default
+        self.symbols = symbols if symbols else TARGET_ASSETS
         
         # Sub-Systems
         self.risk_manager = RiskManager(config)
@@ -22,7 +28,7 @@ class TradingEngine:
         self.logger = TrajectoryLogger(config.get("TRAJECTORY_FILE", "trajectory.csv"))
         
         # State
-        self.symbol_data = {sym: SymbolData(sym) for sym in TARGET_ASSETS}
+        self.symbol_data = {sym: SymbolData(sym) for sym in self.symbols}
         self.portfolio = self.persistence.load_portfolio()
         self.market_regime = MarketRegime.CHOP
 
@@ -31,7 +37,7 @@ class TradingEngine:
         Executes one engine cycle: Fetch -> Detect -> Process -> Save
         """
         # 1. Fetch Data
-        tickers = self.market_feed.get_tickers(TARGET_ASSETS)
+        tickers = self.market_feed.get_tickers(self.symbols)
         console.print(f"[dim]Tick: {self.market_feed.now()} | {len(tickers)} symbols updated[/dim]", end="\r")
         timestamp_str = "" 
         
@@ -46,7 +52,7 @@ class TradingEngine:
 
         # 4. Process Each Symbol
         curr_time = self.market_feed.now()
-        for sym in TARGET_ASSETS:
+        for sym in self.symbols:
             self._process_symbol(sym, tickers.get(sym), curr_time, timestamp_str)
 
         # 5. Persist State
@@ -93,9 +99,13 @@ class TradingEngine:
             trade = next((t for t in self.portfolio if t['symbol'] == symbol), None)
             if trade:
                 # PnL Calc
+                # PnL Calc (Dollar PnL on $100 base is numerically equal to %)
                 pnl = ((price - trade['entry_price']) / trade['entry_price']) * 100
                 data.last_trade_pnl = pnl
-                msg = f"PnL: {pnl:.2f}%"
+                
+                # Format Details
+                entry_date = datetime.fromtimestamp(data.entry_time).strftime('%H:%M:%S') if data.entry_time else "?"
+                msg = f"PnL: ${pnl:.2f} | Entry: {format_price(trade['entry_price'])} @ {entry_date} | Curr: {format_price(price)}"
                 
                 if price < trade['stop_loss']:
                     self._close_position(data, trade, price, "STOP_LOSS")
@@ -141,10 +151,10 @@ class TradingEngine:
             "take_profit": price * (1 + self.config["PROFIT_TARGET_PCT"]/100)
         }
         self.portfolio.append(trade)
-        logger.info(f"OPEN LONG {data.symbol} @ {price}")
+        logger.info(f"OPEN LONG {data.symbol} @ {format_price(price)}")
 
     def _close_position(self, data: SymbolData, trade: dict, price: float, reason: str):
-        logger.info(f"CLOSE {data.symbol} @ {price} ({reason}) PnL: {data.last_trade_pnl:.2f}%")
+        logger.info(f"CLOSE {data.symbol} @ {format_price(price)} ({reason}) PnL: {data.last_trade_pnl:.2f}%")
         if trade in self.portfolio:
             self.portfolio.remove(trade)
         data.state = TradeState.COOLDOWN

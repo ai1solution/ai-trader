@@ -122,6 +122,16 @@ curl -X POST http://localhost:8000/v4/start \
 python v3/live_mock.py --symbols FETUSDT WLDUSDT GRTUSDT
 ```
 
+### V2 Engine (Modern)
+```bash
+python v2_modern/main.py live
+```
+
+### V1 Engine (Legacy)
+```bash
+python v1_legacy/trading_engine.py
+```
+
 ---
 
 ## 📊 Project Structure

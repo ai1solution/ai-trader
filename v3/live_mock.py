@@ -28,9 +28,10 @@ from datetime import datetime
 from typing import Dict, Any
 from collections import defaultdict
 
-from engine import EngineConfig, TradingEngine, EngineLogger
-from engine.market_data import LiveFeed
-from utils import clear_logs
+from .engine import EngineConfig, TradingEngine, EngineLogger
+from .engine.market_data import LiveFeed
+from .engine.api_client import fetch_ticker_snapshot
+from .utils import round_price, format_aggregated_summary, clear_logs, format_price_str
 from rich.console import Console
 from rich.live import Live
 from rich.layout import Layout
@@ -64,6 +65,8 @@ class SymbolRunner:
         self.current_state = "INIT"
         self.velocity = 0.0
         self.position_pnl = 0.0
+        self.entry_price = 0.0
+        self.entry_time = None
         self.is_in_position = False
         
     def run(self):
@@ -103,9 +106,18 @@ class SymbolRunner:
                 
                 # Get position PnL if in position
                 if engine.position:
-                    self.position_pnl = engine.position.get_pnl(tick.price)
+                    # Standardized PnL Calculation ($100 base)
+                    # PnL = ((Current - Entry) / Entry) * 100
+                    self.entry_price = engine.position.entry_price
+                    self.entry_time = engine.position.entry_time
+                    if self.entry_price > 0:
+                        self.position_pnl = ((tick.price - self.entry_price) / self.entry_price) * 100
+                    else:
+                        self.position_pnl = 0.0
                 else:
                     self.position_pnl = 0.0
+                    self.entry_price = 0.0
+                    self.entry_time = None
                 
                 # Get statistics
                 self.stats = engine.get_statistics()
@@ -132,7 +144,8 @@ def create_symbol_panel(symbol: str, runner: SymbolRunner) -> Panel:
     
     # Price
     price_style = "green" if runner.tick_count > 0 else "yellow"
-    table.add_row("Price", f"[{price_style}]${runner.current_price:,.2f}[/{price_style}]")
+    from .utils import format_price_str
+    table.add_row("Price", f"[{price_style}]${format_price_str(runner.current_price)}[/{price_style}]")
     
     # State
     state_colors = {
@@ -153,7 +166,16 @@ def create_symbol_panel(symbol: str, runner: SymbolRunner) -> Panel:
     # Position
     if runner.is_in_position:
         pnl_color = "green" if runner.position_pnl >= 0 else "red"
-        table.add_row("Position PnL", f"[{pnl_color}]${runner.position_pnl:+,.2f}[/{pnl_color}]")
+        
+        # Format Entry Time
+        entry_time_str = "?"
+        if runner.entry_time:
+            # Handle float or datetime
+            ts = runner.entry_time if isinstance(runner.entry_time, (int, float)) else runner.entry_time.timestamp()
+            entry_time_str = datetime.fromtimestamp(ts).strftime('%H:%M:%S')
+
+        table.add_row("Entry", f"${format_price_str(runner.entry_price)} @ {entry_time_str}")
+        table.add_row("PnL ($100)", f"[{pnl_color}]${runner.position_pnl:+,.2f}[/{pnl_color}]")
     else:
         table.add_row("Position", "[dim]No position[/dim]")
     

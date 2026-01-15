@@ -26,21 +26,21 @@ Available Strategies:
 ## Usage
 
 ### 1. Backtesting (Historical Evaluation)
-Run the `historical_runner.py` script.
+Run the `backtest.py` script.
 
 **Basic Run:**
 ```bash
-python historical_runner.py --symbol BTCUSDT --start-date 2024-01-01 --end-date 2024-02-01
+python v3/backtest.py --symbols BTCUSDT --start 2024-01-01 --end 2024-02-01
 ```
 
-**Verify Determinism (Run twice to check consistency):**
+**Multi-Symbol:**
 ```bash
-python historical_runner.py --symbol BTCUSDT --start-date 2024-01-01 --end-date 2024-01-07 --verify-determinism
+python v3/backtest.py --symbols BTCUSDT ETHUSDT --start 2024-01-01 --end 2024-01-07
 ```
 
-**Train/Test Split (Use 70% for training/optimizing, 30% for validation):**
+**(Legacy) Historical Runner:**
 ```bash
-python historical_runner.py --symbol BTCUSDT --start-date 2024-01-01 --end-date 2024-06-01 --split-ratio 0.7
+python v3/historical_runner.py --symbol BTCUSDT --start-date 2024-01-01 --end-date 2024-06-01
 ```
 
 ### 2. Strategy Development

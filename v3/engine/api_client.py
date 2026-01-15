@@ -204,3 +204,16 @@ def subscribe_binance_trades(symbol: str, callback: Callable):
     Full implementation requires asyncio WebSocket client.
     """
     raise NotImplementedError("Live WebSocket feed not yet implemented")
+
+def fetch_ticker_snapshot(symbols: List[str]) -> dict:
+    """
+    Fetch current snapshot for a list of symbols.
+    """
+    exchange = ccxt.binance()
+    try:
+        # ccxt expects symbols in format "BTC/USDT"
+        tickers = exchange.fetch_tickers(symbols)
+        return tickers
+    except Exception as e:
+        print(f"Error fetching snapshot: {e}")
+        return {}

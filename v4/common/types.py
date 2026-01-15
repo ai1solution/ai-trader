@@ -46,6 +46,10 @@ def round_qty(qty: float) -> float:
     factor = 10**8
     return math.floor(qty * factor) / factor
 
+def format_price(price: float) -> str:
+    """Format price with dynamic precision up to 8 decimals."""
+    return f"{price:.8f}".rstrip('0').rstrip('.')
+
 
 # --- Core Data Structures ---
 
@@ -61,7 +65,7 @@ class Tick:
     is_candle_close: bool = False
 
     def __repr__(self):
-        return f"Tick({self.symbol}, {self.timestamp.strftime('%H:%M:%S')}, {self.price:.2f})"
+        return f"Tick({self.symbol}, {self.timestamp.strftime('%H:%M:%S')}, {format_price(self.price)})"
 
 @dataclass
 class Candle:

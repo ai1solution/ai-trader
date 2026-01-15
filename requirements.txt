@@ -11,3 +11,6 @@ fastapi
 uvicorn
 jinja2
 websockets
+supabase
+python-dotenv
+httpx>=0.27.0

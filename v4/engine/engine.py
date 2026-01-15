@@ -6,11 +6,12 @@ from datetime import datetime
 from typing import Optional, List, Dict
 import uuid
 
-from ..common.types import Tick, OrderSide, round_price, round_qty
+from ..common.types import Tick, OrderSide, round_price, round_qty, format_price
 from ..strategies.interface import Strategy, Intent, FillEvent
 from ..config.config import RiskConfig
 from .regime import RegimeClassifier, MarketRegime
 from .portfolio import Portfolio
+from common.supabase_client import get_supabase
 
 class TradingState:
     WAIT = "WAIT"
@@ -38,7 +39,7 @@ class TradingEngine:
     """
     def __init__(self, symbol: str, strategy: Strategy, initial_balance: float = 100.0, 
                  risk_config: RiskConfig = None, log_queue=None, regime_classifier: RegimeClassifier = None,
-                 portfolio: Portfolio = None, use_protection: bool = True):
+                 portfolio: Portfolio = None, use_protection: bool = True, run_id: str = "offline"):
         self.symbol = symbol
         self.strategy = strategy
         self.risk_config = risk_config or {}
@@ -46,6 +47,8 @@ class TradingEngine:
         self.regime_classifier = regime_classifier
         self.portfolio = portfolio
         self.use_protection = use_protection
+        self.run_id = run_id
+        self.sb = get_supabase()
         
         # Initialize Balance
         # If portfolio is used, balance is ignored. 
@@ -71,6 +74,9 @@ class TradingEngine:
             self.log_queue.put_nowait(f"[{self.symbol}] {message}")
         else:
             print(f"[{self.symbol}] {message}")
+            
+        # Supabase Log
+        self.sb.log_event(self.run_id, message, level="INFO", data={"symbol": self.symbol})
 
     async def on_tick(self, tick: Tick):
         self.last_tick = tick
@@ -249,7 +255,7 @@ class TradingEngine:
         else:
             self.balance += pnl
         
-        self.log(f"EXIT @ {exit_price:.2f} PnL: {pnl:.2f} ({reason})")
+        self.log(f"EXIT @ {format_price(exit_price)} PnL: {pnl:.2f} ({reason})")
         
         if pnl > 0:
             self.consecutive_losses = 0
@@ -317,5 +323,18 @@ class TradingEngine:
                 ])
         except Exception as e:
             self.log(f"Failed to log trade to CSV: {e}")
+            
+        # Supabase Trade Log
+        self.sb.log_trade(self.run_id, {
+            "symbol": self.symbol,
+            "side": p.side.value if hasattr(p.side, 'value') else str(p.side),
+            "entry_price": p.entry_price,
+            "exit_price": exit_price,
+            "quantity": p.quantity,
+            "pnl": pnl,
+            "reason": reason,
+            "entry_time": p.entry_time.isoformat(),
+            "exit_time": tick.timestamp.isoformat()
+        })
         
 

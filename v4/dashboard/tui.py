@@ -9,6 +9,7 @@ from rich.panel import Panel
 from rich.console import Console, Group
 from rich.text import Text
 from rich import box
+from ..common.types import format_price
 
 class Dashboard:
     def __init__(self, runner):
@@ -73,8 +74,8 @@ class Dashboard:
         table.add_column("Strategy", style="dim white")
         table.add_column("Price", justify="right", style="yellow")
         table.add_column("State", justify="center")
-        table.add_column("Balance", justify="right")
-        table.add_column("PnL", justify="right")
+        table.add_column("Entry", justify="right", width=18)
+        table.add_column("PnL ($100)", justify="right")
         table.add_column("Trades", justify="right")
         
         stats = self.runner.get_stats()
@@ -83,13 +84,27 @@ class Dashboard:
             pnl_style = "green" if s['pnl'] >= 0 else "red"
             state_color = "green" if s['state'] == "HOLD" else "white" if s['state'] == "WAIT" else "yellow"
             
+            # Format Entry
+            entry_str = "-"
+            pnl_str = "-"
+            
+            if s['active']:
+                et = s['entry_time'] # datetime object
+                ts_str = et.strftime("%H:%M:%S") if et else "?"
+                ts_str = et.strftime("%H:%M:%S") if et else "?"
+                entry_str = f"{format_price(s['entry_price'])} @ {ts_str}"
+                
+                apnl = s['active_pnl_100']
+                col = "green" if apnl >= 0 else "red"
+                pnl_str = f"[{col}]${apnl:+.2f}[/{col}]"
+                
             table.add_row(
                 s['symbol'],
                 s['strategy'],
-                f"{s['price']:.4f}",
+                f"{format_price(s['price'])}",
                 f"[{state_color}]{s['state']}[/{state_color}]",
-                f"${s['balance']:.2f}",
-                f"[{pnl_style}]{s['pnl']:+.2f}[/{pnl_style}]",
+                entry_str,
+                pnl_str,
                 str(s['trades'])
             )
             

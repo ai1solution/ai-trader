@@ -39,6 +39,14 @@ strategies:
 mode: paper # or backtest
 ```
 
+## Research/Experimentation
+Run specific research modes:
+```bash
+python v4/main.py --experiment universe
+python v4/main.py --experiment regime
+python v4/main.py --experiment full
+```
+
 ## Architecture
 
 - `v4/data`: Feed and Provider implementations.

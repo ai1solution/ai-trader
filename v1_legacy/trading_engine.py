@@ -292,8 +292,7 @@ def load_config():
 
 # --- Helper Functions ---
 def format_price(price):
-    if price < 1.0: return f"{price:.8f}"
-    else: return f"{price:.2f}"
+    return f"{price:.8f}".rstrip('0').rstrip('.')
 
 class TechnicalAnalysis:
     @staticmethod
@@ -406,8 +405,10 @@ def run_command_center(market_feed: MarketDataFeed = None):
                 )
                 master_table.add_column("Ticker", style="cyan", width=12)
                 master_table.add_column("State", justify="center", width=10)
-                master_table.add_column("Price", justify="right", width=12)
-                master_table.add_column("PnL / Stop", justify="right", width=14)
+                master_table.add_column("Entry Details", justify="right", width=18)
+                master_table.add_column("Current Price", justify="right", width=12)
+                master_table.add_column("PnL ($100)", justify="right", width=12)
+                master_table.add_column("Stop", justify="right", width=10)
                 master_table.add_column("Velocity", justify="right", width=10)
                 master_table.add_column("Signal", justify="center", width=14)
                 master_table.add_column("Advisor", justify="left")
@@ -600,7 +601,7 @@ def run_command_center(market_feed: MarketDataFeed = None):
                         
                         formatted_ticker = f"[{symbol.split('/')[0]}]"
                         user_actions.append(f"🔵 OPEN {direction} ({eqs}) {formatted_ticker} @ {format_price(price)}")
-                        log_event(f"ENTRY {symbol} {direction} ({eqs}) @ {price}")
+                        log_event(f"ENTRY {symbol} {direction} ({eqs}) @ {format_price(price)}")
 
                     # 5. HOLD -> EXIT Logic (Signal Decay & Management)
                     elif s_data.state == TradeState.HOLD:
@@ -784,6 +785,8 @@ def run_command_center(market_feed: MarketDataFeed = None):
                     # Log Price Snapshot (V11.1 Requirement)
                     log_event(f"PRICE SNAPSHOT | symbol={symbol} | last={price} | bid={bid} | ask={ask} | spread={spread_pct:.3f}%")
                     
+                    entry_display = "-"
+                    stop_display = "-"
                     pnl_display = "-"
                     active_t = next((t for t in portfolio if t['symbol'] == symbol), None)
 
@@ -792,6 +795,17 @@ def run_command_center(market_feed: MarketDataFeed = None):
                         entry = active_t['entry_price']
                         lev = active_t['leverage']
                         rem_size = active_t.get('remaining_size', 1.0)
+                        
+                        entry_time_ts = active_t['entry_time']
+                        try:
+                            # Handle both float timestamp and datetime if applicable
+                            ts = entry_time_ts if isinstance(entry_time_ts, float) else time.mktime(entry_time_ts.timetuple())
+                            entry_time_str = datetime.fromtimestamp(ts).strftime('%H:%M:%S')
+                        except:
+                            entry_time_str = "?"
+
+                        entry_display = f"{format_price(entry)}\n[dim]{entry_time_str}[/dim]"
+                        stop_display = format_price(active_t['stop_loss'])
                         
                         if active_t['direction'] == "LONG": curr_raw = ((price - entry)/entry)*100*lev
                         else: curr_raw = ((entry - price)/entry)*100*lev
@@ -802,7 +816,9 @@ def run_command_center(market_feed: MarketDataFeed = None):
                              w_pnl = curr_raw
 
                         color = "green" if w_pnl > 0 else "red"
-                        pnl_display = f"[{color}]{w_pnl:.2f}%[/{color}]"
+                        # Dollar PnL based on $100 investment = Percentage PnL
+                        dollar_val = w_pnl
+                        pnl_display = f"[{color}]${dollar_val:.2f}[/{color}]"
                         if active_t.get('partial_taken', False):
                             pnl_display += " [bold yellow]½[/]"
                     
@@ -820,7 +836,10 @@ def run_command_center(market_feed: MarketDataFeed = None):
 
                     master_table.add_row(
                         symbol, state_display,
-                        format_price(price), pnl_display,
+                        entry_display,
+                        format_price(price), 
+                        pnl_display,
+                        stop_display,
                         f"[{vel_color}]{current_vel:.2f}%[/{vel_color}]",
                         "ACTIVE" if active_t else "-",
                         adv_msg
@@ -878,4 +897,13 @@ def run_command_center(market_feed: MarketDataFeed = None):
                 market_feed.sleep(5)
 
 if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser(description="V1 Trading Engine")
+    parser.add_argument("--symbols", nargs="+", help="List of symbols to trade (e.g. BTC/USD ETH/USD)")
+    args = parser.parse_args()
+    
+    if args.symbols:
+        TARGET_ASSETS = args.symbols
+        console.print(f"[yellow]Overriding symbols with CLI args: {TARGET_ASSETS}[/yellow]")
+
     run_command_center()
