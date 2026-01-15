@@ -2,7 +2,7 @@
 # Serves both Next.js frontend and FastAPI backend in one container
 
 # Stage 1: Build Backend Dependencies
-FROM python:3.11-slim as python-base
+FROM python:3.11-slim AS python-base
 WORKDIR /app
 
 # Install system dependencies
@@ -19,10 +19,16 @@ RUN pip install --no-cache-dir -r requirements.txt
 FROM node:20-alpine AS frontend-builder
 WORKDIR /app
 
-# Copy frontend files
+# Install dependencies for node-gyp if needed
+RUN apk add --no-cache python3 make g++
+
+# Copy package files first for better layer caching
 COPY web_mvp_fresh/package.json web_mvp_fresh/package-lock.json* ./
+
+# Clean install of all dependencies (including devDependencies for build)
 RUN npm ci
 
+# Copy all frontend source files
 COPY web_mvp_fresh .
 
 # Build for production
