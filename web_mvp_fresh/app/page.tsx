@@ -24,10 +24,10 @@ import {
 } from '@chakra-ui/react'
 import { Search, TrendingUp, Terminal, Zap, BarChart2, Shield, Activity } from 'lucide-react'
 import { useRef } from 'react'
-import { ActiveEngineList } from '../components/ActiveEngineList'
-import { NewsPanel } from '../components/NewsPanel'
-import { AIOSLogo } from '../components/AIOSLogo'
-import { TrendingNews } from '../components/TrendingNews'
+import { ActiveEngineList } from '@/components/ActiveEngineList'
+import { NewsPanel } from '@/components/NewsPanel'
+import { AIOSLogo } from '@/components/AIOSLogo'
+import { TrendingNews } from '@/components/TrendingNews'
 
 const DEFAULT_COINS = [
     'BTC/USDT', 'ETH/USDT', 'SOL/USDT', 'BNB/USDT', 'ADA/USDT',

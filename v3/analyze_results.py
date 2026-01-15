@@ -115,3 +115,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+# python v3/live_mock.py --symbols AIA/USDT BOT/USDT DOLO/USDT DAM/USDT AIX/USDT CC/USDT

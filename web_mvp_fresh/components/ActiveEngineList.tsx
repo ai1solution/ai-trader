@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Box, SimpleGrid, Text, Badge, HStack, VStack, Flex, Heading, Icon, Button } from '@chakra-ui/react';
-import { api, EngineState } from '../lib/api';
+import { api, EngineState } from '@/lib/api';
 import { Activity, Zap, BarChart2, Shield, TrendingUp, Play } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { SkeletonEngineGrid } from './SkeletonCard';

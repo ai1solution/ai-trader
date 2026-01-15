@@ -1,4 +1,4 @@
-import { EngineInsights } from '../lib/api';
+import { EngineInsights } from '@/lib/api';
 import {
     Box,
     SimpleGrid,
