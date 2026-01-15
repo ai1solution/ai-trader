@@ -2,10 +2,10 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { api, EngineState } from '@/lib/api';
-import { ProductHeader } from '@/components/ProductHeader';
-import { InsightsPanel } from '@/components/InsightsPanel';
-import { TVChart } from '@/components/TVChart';
+import { api, EngineState } from '../../../lib/api';
+import { ProductHeader } from '../../../components/ProductHeader';
+import { InsightsPanel } from '../../../components/InsightsPanel';
+import { TVChart } from '../../../components/TVChart';
 import {
     Box,
     Container,
@@ -23,7 +23,7 @@ import {
     useColorModeValue
 } from '@chakra-ui/react';
 import { ArrowLeft, Activity, TrendingUp, Play } from 'lucide-react';
-import { NewsPanel } from '@/components/NewsPanel';
+import { NewsPanel } from '../../../components/NewsPanel';
 
 export default function CoinPage() {
     const router = useRouter();
