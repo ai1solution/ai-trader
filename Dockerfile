@@ -1,5 +1,5 @@
-# Unified Dockerfile for Render Free Tier
-# This serves both the Next.js frontend and FastAPI backend in one container
+# Unified Dockerfile for Render Deployment
+# Serves both Next.js frontend and FastAPI backend in one container
 
 # Stage 1: Build Backend Dependencies
 FROM python:3.11-slim as python-base
@@ -25,8 +25,9 @@ RUN npm ci
 
 COPY web_mvp_fresh .
 
-# Build for production  
+# Build for production
 ENV NEXT_PUBLIC_API_URL=/api
+ENV NODE_ENV=production
 RUN npm run build
 
 # Stage 3: Final production image
@@ -34,11 +35,12 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install runtime dependencies
+# Install runtime dependencies (curl for health checks, node for Next.js)
 RUN apt-get update && apt-get install -y \
     curl \
     nodejs \
     npm \
+    procps \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy Python dependencies from python-base
@@ -61,22 +63,22 @@ COPY --from=frontend-builder /app/public ./frontend/public
 # Create necessary directories
 RUN mkdir -p logs results
 
-# Environment variables
+# Environment variables (PORT will be set by Render)
 ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
 ENV NODE_ENV=production
-ENV PORT=3000
+ENV PORT=10000
 
 # Copy startup script
 COPY start.sh .
 RUN chmod +x start.sh
 
-# Expose port (Render will use PORT env var)
+# Expose port (Render dynamically assigns PORT)
 EXPOSE ${PORT}
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-    CMD curl -f http://localhost:${PORT} || exit 1
+# Health check - must check the PORT that Render assigns
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:${PORT:-10000} || exit 1
 
 # Start both services
 CMD ["./start.sh"]

@@ -1,15 +1,20 @@
 services:
   - type: web
-    name: ai-trader-dashboard
+    name: aios-platform
     env: docker
     region: ohio
     plan: free
     branch: main
     autoDeploy: true
     dockerfilePath: ./Dockerfile
+    dockerCommand: ./start.sh
     healthCheckPath: /
     envVars:
+      - key: PORT
+        value: 10000
       - key: PYTHONUNBUFFERED
         value: 1
       - key: NODE_ENV
         value: production
+      - key: NEXT_PUBLIC_API_URL
+        value: /api
