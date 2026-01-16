@@ -45,37 +45,17 @@ export function NewsPanel({ symbol }: { symbol?: string }) {
             try {
                 setLoading(true);
 
-                // Build query based on symbol
-                const cleanSymbol = symbol ? symbol.split('/')[0] : null;
-                const query = cleanSymbol
-                    ? `${cleanSymbol} cryptocurrency news`
-                    : 'cryptocurrency market news';
+                // Call backend API instead of SerpAPI directly
+                const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
+                const endpoint = symbol
+                    ? `${API_URL}/news/${encodeURIComponent(symbol)}`
+                    : `${API_URL}/news`;
 
-                // Call SerpAPI directly
-                const response = await axios.get(SERPAPI_BASE, {
-                    params: {
-                        engine: 'google_news',
-                        q: query,
-                        api_key: SERPAPI_KEY,
-                        num: symbol ? 10 : 15,
-                        gl: 'us',
-                        hl: 'en'
-                    },
+                const response = await axios.get<NewsResponse>(endpoint, {
                     timeout: 10000
                 });
 
-                // Parse news results
-                const newsResults = response.data.news_results || [];
-                const articles: NewsArticle[] = newsResults.map((item: any) => ({
-                    title: item.title || '',
-                    link: item.link || '',
-                    snippet: item.snippet || '',
-                    source: item.source?.name || 'Unknown',
-                    date: item.date || '',
-                    thumbnail: item.thumbnail || ''
-                }));
-
-                setNews(articles);
+                setNews(response.data.news || []);
                 setError(null);
             } catch (err) {
                 console.error('News fetch error:', err);

@@ -36,28 +36,13 @@ export function TrendingNews() {
     useEffect(() => {
         const fetchTrending = async () => {
             try {
-                const response = await axios.get(SERPAPI_BASE, {
-                    params: {
-                        engine: 'google_news',
-                        q: 'Bitcoin cryptocurrency trending',
-                        api_key: SERPAPI_KEY,
-                        num: 3,
-                        gl: 'us',
-                        hl: 'en'
-                    },
+                // Call backend API instead of SerpAPI directly
+                const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
+                const response = await axios.get(`${API_URL}/news`, {
                     timeout: 10000
                 });
 
-                const newsResults = response.data.news_results || [];
-                const articles: TrendingArticle[] = newsResults.slice(0, 3).map((item: any) => ({
-                    title: item.title || '',
-                    link: item.link || '',
-                    snippet: item.snippet || '',
-                    source: item.source?.name || 'Unknown',
-                    date: item.date || '',
-                    thumbnail: item.thumbnail || ''
-                }));
-
+                const articles = (response.data.news || []).slice(0, 3);
                 setNews(articles);
             } catch (err) {
                 console.error('Trending news error:', err);
